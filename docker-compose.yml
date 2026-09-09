@@ -7,13 +7,8 @@
 # Sync-Mechanismus, ebenfalls ohne WebSockets.
 services:
   cinny:
-    image: ajbura/cinny:latest
+    build: .
     container_name: cinny
     restart: unless-stopped
-    volumes:
-      # Setzt den Standard-Homeserver fest, damit man ihn beim Login nicht
-      # jedes Mal eintippen muss -- Login mit anderem Server bleibt trotzdem
-      # moeglich (allowCustomHomeservers: true).
-      - ./config.json:/app/config.json:ro
     ports:
       - "${HOST_PORT:-8095}:80"
