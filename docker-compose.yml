@@ -1,10 +1,13 @@
-# Cinny -- unabhaengiger, schlanker Matrix-Web-Client (Alternative zu
-# Element/Riot), offizielles Image (Nginx + statisches React-SPA-Build).
-# Kein eigener Server-Prozess/API -- der Client spricht direkt per Matrix
-# Client-Server-API mit dem Homeserver (hier: matrix.bravokilo.cloud). Das
-# Kern-Sync-Protokoll von Matrix (GET /sync) ist HTTP-Long-Polling, keine
-# WebSockets -- Cinny nutzt dafuer wie Element den Standard matrix-js-sdk-
-# Sync-Mechanismus, ebenfalls ohne WebSockets.
+# Cinny -- independent, lightweight Matrix web client (an alternative to
+# Element/Riot), built on the official image (nginx + static React SPA).
+# No server process of its own -- the client talks straight to whatever
+# Matrix homeserver it's pointed at over the Matrix Client-Server API.
+# Matrix's core sync protocol (GET /sync) is HTTP long-polling by design,
+# not WebSockets -- Cinny uses the standard matrix-js-sdk sync mechanism
+# like every other Matrix client, so there's nothing WebSocket-based here.
+#
+# Which homeserver to use is resolved at container startup by
+# entrypoint.sh, not hardcoded in this repo -- see README.md.
 services:
   cinny:
     build: .
@@ -12,3 +15,18 @@ services:
     restart: unless-stopped
     ports:
       - "${HOST_PORT:-8095}:80"
+    environment:
+      # Manual override -- set this to your homeserver's domain (e.g.
+      # matrix.example.com) to skip auto-detection entirely. Leave blank
+      # to let entrypoint.sh try to auto-detect one instead (see README).
+      - HOMESERVER_URL=${HOMESERVER_URL:-}
+    # Optional: lets entrypoint.sh look at sibling containers on this same
+    # Docker host to auto-detect a running Synapse/Dendrite/Conduit
+    # homeserver and read its configured server name, so you don't have to
+    # set HOMESERVER_URL by hand. Comment this out if you'd rather not
+    # give the container read access to the Docker socket (it's a real
+    # privilege-adjacent grant, even read-only) -- auto-detection then
+    # simply doesn't run, and HOMESERVER_URL (or the in-app login screen)
+    # is exactly as capable, just not automatic.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro

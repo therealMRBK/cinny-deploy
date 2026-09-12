@@ -1,7 +1,12 @@
-# Baut config.json direkt ins offizielle Cinny-Image statt es per Volume zu
-# mounten -- ein Bind-Mount von config.json scheiterte bei diesem Git-Stack-
-# Deployment zuverlaessig ("not a directory", vermutlich ein Checkout-
-# Timing-Problem bei Portainers Git-Stacks mit einzelnen Dateien statt
-# ganzen Verzeichnissen). Ein eigenes, gebautes Image umgeht das komplett.
+# config.json is generated at container startup by entrypoint.sh, not baked
+# in at build time -- that's what lets this image work for any homeserver
+# without editing this repo. curl+jq are needed only for the optional
+# Docker-socket auto-detection step; harmless if that path is never used.
 FROM ajbura/cinny:latest
-COPY config.json /app/config.json
+
+RUN apk add --no-cache curl jq
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
